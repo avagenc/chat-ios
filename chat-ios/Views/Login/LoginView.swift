@@ -136,13 +136,10 @@ struct LoginView: View {
     }
 
     private var legalText: Text {
-        if AppConfig.legalURL != nil {
-            let base = AppConfig.webAppURL
-            return Text(.init(
-                "Dengan masuk, kamu setuju dengan [Ketentuan](\(base)/legal) dan [Kebijakan Privasi](\(base)/legal) Avagenc."
-            ))
-        }
-        return Text("Dengan masuk, kamu setuju dengan Ketentuan dan Kebijakan Privasi Avagenc.")
+        let base = AppConfig.webAppURL
+        return Text(.init(
+            "Dengan masuk, kamu setuju dengan [Ketentuan](\(base)/legal) dan [Kebijakan Privasi](\(base)/legal) Avagenc."
+        ))
     }
 
     /// Typewriter: type over ~950 ms, pause 10 s, repeat.

@@ -28,7 +28,7 @@ visual design (warm cream, Newsreader serif).
 ## Configuration & auth
 
 - `Core/AppConfig.swift`: `apiBase` = Cloud Run backend URL; `webAppURL` —
-  web origin for `/legal` links (empty = links render as plain text).
+  web origin for `/legal` links.
 - **Auth = Firebase SDK + GoogleSignIn SDK** (SPM: `firebase-ios-sdk` product
   `FirebaseAuth`, `GoogleSignIn-iOS`). Configured from
   `chat-ios/GoogleService-Info.plist` (bundle `avagenc.chat-ios`).

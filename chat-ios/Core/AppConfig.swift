@@ -16,15 +16,9 @@ enum AppConfig {
     // there (the REVERSED_CLIENT_ID scheme is also registered in Info.plist).
 
     /// Web app origin — used for legal page links (/legal).
-    /// Empty = legal links render as plain text.
     static let webAppURL = "https://chat.dev.avagenc.com"
 
     /// This app's custom URL scheme (registered in Info.plist) — used for
     /// integration-linking callbacks once the backend supports mobile redirects.
     static let linkCallbackScheme = "avagenc-chat"
-
-    static var legalURL: URL? {
-        guard !webAppURL.isEmpty else { return nil }
-        return URL(string: webAppURL + "/legal")
-    }
 }
