@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "tuya-smart.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

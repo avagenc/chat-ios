@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>409829581223-2bp2t77b0aahc566aictj68imdf9u45e.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.409829581223-2bp2t77b0aahc566aictj68imdf9u45e</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBXvCOd4B6JSi9Deb0FZBbTZWD2kfvZX3Q</string>
+	<key>GCM_SENDER_ID</key>
+	<string>409829581223</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>avagenc.chat-ios</string>
+	<key>PROJECT_ID</key>
+	<string>avagenc-dev</string>
+	<key>STORAGE_BUCKET</key>
+	<string>avagenc-dev.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:409829581223:ios:95c2fb1534eeedef43d682</string>
+</dict>
+</plist>

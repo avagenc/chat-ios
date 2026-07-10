@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Newsreader-Regular.ttf</string>
+		<string>Newsreader-Medium.ttf</string>
+		<string>Newsreader-SemiBold.ttf</string>
+		<string>InterTight-Regular.ttf</string>
+		<string>InterTight-Medium.ttf</string>
+		<string>InterTight-SemiBold.ttf</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>avagenc.chat-ios.link</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>avagenc-chat</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>avagenc.chat-ios.googlesignin</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.409829581223-2bp2t77b0aahc566aictj68imdf9u45e</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
