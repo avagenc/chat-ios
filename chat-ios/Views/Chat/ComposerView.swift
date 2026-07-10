@@ -14,6 +14,7 @@ struct ComposerView: View {
     @Binding var text: String
     var busy: Bool
     var onSend: (String) -> Void
+    var onCancel: () -> Void = {}
 
     @FocusState private var focused: Bool
 
@@ -41,6 +42,22 @@ struct ComposerView: View {
         !busy && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    /// Background-only mirror of the draft: all glyphs transparent, @mention
+    /// tokens get an accent pill behind them (strong tint when the agent is
+    /// known, light tint while still partial). The TextField on top draws the
+    /// visible text — same trick as the web composer's `.ta-mirror-under`.
+    private var mirrorHighlights: AttributedString {
+        var result = AttributedString(text)
+        result.font = .sans(15.5)
+        result.foregroundColor = .clear
+        for match in text.matches(of: /@(\w+)/) {
+            guard let range = Range(match.range, in: result) else { continue }
+            let known = Agents.byID[String(match.1).lowercased()] != nil
+            result[range].backgroundColor = known ? Theme.accentTintStrong : Theme.accentTint
+        }
+        return result
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if !mentionMatches.isEmpty {
@@ -51,31 +68,34 @@ struct ComposerView: View {
             }
 
             HStack(alignment: .bottom, spacing: 6) {
-                TextField(
-                    busy ? "Menunggu balasan agent…" : "Ketik pesan…",
-                    text: $text,
-                    axis: .vertical
-                )
-                .font(.sans(15.5))
-                .foregroundStyle(Theme.ink)
-                .tint(Theme.accent)
-                .lineLimit(1 ... 6)
-                .focused($focused)
-                .disabled(busy)
-                .padding(.leading, 10)
-                .padding(.vertical, 10)
+                // typing stays available during a turn — only sending is locked
+                TextField("Ketik pesan…", text: $text, axis: .vertical)
+                    .font(.sans(15.5))
+                    .foregroundStyle(Theme.ink)
+                    .tint(Theme.accent)
+                    .lineLimit(1 ... 6)
+                    .focused($focused)
+                    .background(alignment: .topLeading) {
+                        Text(mirrorHighlights)
+                            .lineLimit(1 ... 6)
+                            .allowsHitTesting(false)
+                    }
+                    .padding(.leading, 10)
+                    .padding(.vertical, 10)
 
+                // busy → stop button (cancels the in-flight request)
                 Button {
-                    send()
+                    if busy { onCancel() } else { send() }
                 } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(canSend ? .white : Theme.inkFaint)
+                    Image(systemName: busy ? "stop.fill" : "arrow.up")
+                        .font(.system(size: busy ? 14 : 17, weight: .semibold))
+                        .foregroundStyle(busy || canSend ? .white : Theme.inkFaint)
                         .frame(width: 40, height: 40)
-                        .background(Circle().fill(canSend ? Theme.accent : Theme.bgSunk))
+                        .background(Circle().fill(busy || canSend ? Theme.accent : Theme.bgSunk))
                 }
-                .disabled(!canSend)
+                .disabled(!busy && !canSend)
                 .animation(.avagencEase, value: canSend)
+                .animation(.avagencEase, value: busy)
             }
             .padding(6)
             .background(

@@ -68,18 +68,25 @@ struct ChatScreen: View {
             if session.searchActive {
                 searchBar
             } else {
-                ComposerView(text: $draft, busy: conversation.busy) { text in
-                    Task { await conversation.sendText(text) }
-                }
+                ComposerView(
+                    text: $draft,
+                    busy: conversation.busy,
+                    onSend: { text in Task { await conversation.sendText(text) } },
+                    onCancel: { conversation.cancelTurn() }
+                )
             }
         }
         .sheet(item: $agentInfo) { agent in
             AgentInfoSheet(agent: agent)
         }
         #if DEBUG
-        // Test automation: `-autoSend "<text>"` sends through the real path.
+        // Test automation: `-autoSend "<text>"` sends through the real path;
+        // `-prefillDraft "<text>"` only fills the composer (no send).
         .task {
             let args = ProcessInfo.processInfo.arguments
+            if let i = args.firstIndex(of: "-prefillDraft"), args.indices.contains(i + 1) {
+                draft = args[i + 1]
+            }
             guard let i = args.firstIndex(of: "-autoSend"), args.indices.contains(i + 1) else {
                 return
             }
@@ -123,8 +130,8 @@ struct ChatScreen: View {
                     .riseIn()
                 }
 
-                if let thinkingAgent = conversation.thinking {
-                    ThinkingRow(agent: thinkingAgent)
+                if conversation.thinking {
+                    ThinkingRow()
                         .padding(.top, Theme.messageGap)
                         .riseIn()
                 }

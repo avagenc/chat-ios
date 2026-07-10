@@ -32,13 +32,15 @@ final class ConversationStore {
     /// was sent — a same-text human message with an id outside this set means
     /// our message has landed.
     private var pendingBaseline = Set<String>()
-    private(set) var thinking: AgentSpec?
+    private(set) var thinking = false
     private(set) var busy = false
     private(set) var loaded = false
 
     private var sendSeq = 0
     /// An in-flight poll must not clobber the result of a later fetch.
     private var fetchSeq = 0
+    /// The in-flight agent POST — kept so the stop button can cancel it.
+    private var postTask: Task<Data?, any Error>?
 
     init(api: APIClient = .shared, wallet: WalletStore) {
         self.api = api
@@ -50,7 +52,7 @@ final class ConversationStore {
     }
 
     var empty: Bool {
-        loaded && serverMsgs.isEmpty && pending == nil && thinking == nil
+        loaded && serverMsgs.isEmpty && pending == nil && !thinking
     }
 
     /// Load history from the backend. Called once after login.
@@ -76,6 +78,14 @@ final class ConversationStore {
         await runTurn(text: trimmed, msgID: msg.id, agent: Agents.route(trimmed))
     }
 
+    /// Cancel the in-flight agent POST (the send button becomes a stop button
+    /// while a turn runs). This only drops the HTTP request — the backend has
+    /// already persisted the human message at the start of the run, and any
+    /// agent reply that still lands shows up on the next fetch.
+    func cancelTurn() {
+        postTask?.cancel()
+    }
+
     /// Resend a failed optimistic message.
     func retry(id: String) async {
         guard !busy, let msg = pending, msg.id == id, !msg.text.isEmpty else { return }
@@ -84,7 +94,10 @@ final class ConversationStore {
         // even though its HTTP response never reached us. Resending without
         // checking = duplicate message = the agent triggered twice.
         try? await fetchThread()
-        guard pending?.id == id else { return } // already landed — don't re-POST
+        // Re-check busy: the guard above runs BEFORE the await, so a second
+        // "Coba lagi" tap during the reconcile could slip past it — without
+        // this both taps would reach runTurn and POST the agent twice.
+        guard !busy, pending?.id == id else { return } // landed / already retrying
         await runTurn(text: msg.text, msgID: id, agent: Agents.route(msg.text))
     }
 
@@ -99,7 +112,7 @@ final class ConversationStore {
         serverMsgs = []
         pending = nil
         pendingBaseline = []
-        thinking = nil
+        thinking = false
         busy = false
     }
 
@@ -108,7 +121,7 @@ final class ConversationStore {
         serverMsgs = []
         pending = nil
         pendingBaseline = []
-        thinking = nil
+        thinking = false
         busy = false
         loaded = false
     }
@@ -154,7 +167,7 @@ final class ConversationStore {
 
     private func runTurn(text: String, msgID: String, agent: AgentSpec) async {
         busy = true
-        thinking = agent
+        thinking = true
 
         // Poll the thread during orchestration so delegation/specialist turns show up live
         let poller = Task { [weak self] in
@@ -165,7 +178,9 @@ final class ConversationStore {
             }
         }
 
-        do {
+        // The POST runs in its own task so the stop button can cancel just the
+        // HTTP request (cancelTurn) without tearing down this whole turn.
+        let post = Task { [api] in
             // Don't hang up before the server does: dropping the connection also
             // cancels the run context server-side (killing the orchestration
             // mid-flight). Cloud Run closes it at its own request timeout
@@ -175,35 +190,51 @@ final class ConversationStore {
                 body: AgentTurnRequest(message: text),
                 timeout: 300
             )
+        }
+        postTask = post
+
+        do {
+            _ = try await post.value
             if pending?.id == msgID { updatePending { $0.status = nil } }
             try? await fetchThread()
         } catch {
-            // A failed POST ≠ the message failed to send: the backend persists
-            // the human message at the START of a run. Check the server first —
-            // if it landed, marking it as an error (and the user tapping
-            // "Coba lagi") would trigger the agent twice.
-            var landed = false
-            do {
-                try await fetchThread()
-                landed = pending?.id != msgID
-            } catch {
-                landed = false
-            }
-            if !landed {
-                let note: ChatMessage.ErrorNote? =
-                    (error as? ApiError)?.status == 402 ? .saldo : nil
-                if pending?.id == msgID { updatePending { $0.status = .error(note: note) } }
-            } else if !(error is ApiError) {
-                // Network error on our side, but the message was recorded: the
-                // orchestration is likely still running — keep the poller alive
-                // for a while.
-                try? await Task.sleep(for: Self.watchWindow)
+            let cancelled =
+                error is CancellationError || (error as? URLError)?.code == .cancelled
+            if cancelled {
+                // User cancelled — stop waiting, reconcile once. The human
+                // message was persisted at the start of the run; whatever the
+                // orchestration still writes appears on a later fetch.
                 try? await fetchThread()
+                if pending?.id == msgID { updatePending { $0.status = nil } }
+            } else {
+                // A failed POST ≠ the message failed to send: the backend persists
+                // the human message at the START of a run. Check the server first —
+                // if it landed, marking it as an error (and the user tapping
+                // "Coba lagi") would trigger the agent twice.
+                var landed = false
+                do {
+                    try await fetchThread()
+                    landed = pending?.id != msgID
+                } catch {
+                    landed = false
+                }
+                if !landed {
+                    let note: ChatMessage.ErrorNote? =
+                        (error as? ApiError)?.status == 402 ? .saldo : nil
+                    if pending?.id == msgID { updatePending { $0.status = .error(note: note) } }
+                } else if !(error is ApiError) {
+                    // Network error on our side, but the message was recorded: the
+                    // orchestration is likely still running — keep the poller alive
+                    // for a while.
+                    try? await Task.sleep(for: Self.watchWindow)
+                    try? await fetchThread()
+                }
             }
         }
 
+        postTask = nil
         poller.cancel()
-        thinking = nil
+        thinking = false
         busy = false
         // the turn just added cost — refresh balance & usage in the background
         await wallet.refreshQuietly()

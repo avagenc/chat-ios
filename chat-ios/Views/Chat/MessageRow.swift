@@ -194,51 +194,58 @@ struct MessageRow: View {
     }
 }
 
-// MARK: - Thinking (three blinking dots in the agent color)
+// MARK: - Thinking (general indicator: breathing Avagenc mark + whimsical status)
 
 struct ThinkingRow: View {
-    var agent: AgentSpec
-    @State private var phase = false
+    /// Playful statuses shown (in random order) while the orchestration runs.
+    static let statuses = [
+        "combobulating", "bomboclating", "invading syria", "gatau ah males",
+        "praying", "manifesting", "reticulating splines", "ngopi dulu bentar",
+        "summoning the council", "menghitung domba", "downloading wisdom",
+        "percolating", "mikir keras banget", "consulting the elders",
+        "menata ulang alam semesta", "polishing neurons",
+    ]
+    /// Dwell time per status before crossfading to the next.
+    static let statusDwell: Duration = .milliseconds(2400)
+
+    @State private var order = Self.statuses.shuffled()
+    @State private var index = 0
+    @State private var breathing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 5) {
-                Text(agent.name)
-                    .font(.sans(12.5, .semibold))
-                    .foregroundStyle(agent.color)
-                Text("· \(agent.role)")
-                    .font(.sans(11))
-                    .foregroundStyle(Theme.inkFaint)
-            }
-            .padding(.leading, 37)
-
-            HStack(alignment: .top, spacing: 8) {
-                AgentAvatar(agent: agent)
-                HStack(spacing: 5) {
-                    ForEach(0 ..< 3) { i in
-                        Circle()
-                            .fill(agent.color)
-                            .frame(width: 6, height: 6)
-                            .opacity(phase ? 0.25 : 1)
-                            .animation(
-                                .easeInOut(duration: 0.625)
-                                    .repeatForever()
-                                    .delay(Double(i) * 0.18),
-                                value: phase
-                            )
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 15)
-                .background(
-                    BubbleShape(isHuman: false, grouped: false)
-                        .fill(Theme.surface)
-                        .overlay(BubbleShape(isHuman: false, grouped: false).stroke(Theme.line, lineWidth: 1))
+        // bare mark + status — no avatar circle, no chat bubble
+        HStack(spacing: 8) {
+            // the Avagenc mark "breathes" — swells and fades in place
+            LogoView(size: 18, variant: .accent)
+                .scaleEffect(breathing ? 1.18 : 0.88)
+                .opacity(breathing ? 1 : 0.45)
+                .animation(
+                    reduceMotion
+                        ? nil
+                        : .easeInOut(duration: 1.05).repeatForever(),
+                    value: breathing
                 )
+                .frame(width: 26, height: 26) // keep the avatar column alignment
+
+            Text("\(order[index])…")
+                .font(.sans(13, .medium))
+                .foregroundStyle(Theme.inkMuted)
+                .id(index)
+                .transition(.opacity)
+        }
+        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onAppear { breathing = true }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: Self.statusDwell)
+                guard !Task.isCancelled else { return }
+                withAnimation(.avagencEase) {
+                    index = (index + 1) % order.count
+                }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .onAppear { phase = true }
     }
 }
 
