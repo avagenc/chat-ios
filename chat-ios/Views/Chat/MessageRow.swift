@@ -194,7 +194,7 @@ struct MessageRow: View {
     }
 }
 
-// MARK: - Thinking (general indicator: breathing Avagenc mark + whimsical status)
+// MARK: - Thinking (general indicator: glow-sweep Avagenc mark + whimsical status)
 
 struct ThinkingRow: View {
     /// Playful statuses shown (in random order) while the orchestration runs.
@@ -210,23 +210,20 @@ struct ThinkingRow: View {
 
     @State private var order = Self.statuses.shuffled()
     @State private var index = 0
-    @State private var breathing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         // bare mark + status — no avatar circle, no chat bubble
         HStack(spacing: 8) {
-            // the Avagenc mark "breathes" — swells and fades in place
-            LogoView(size: 18, variant: .accent)
-                .scaleEffect(breathing ? 1.18 : 0.88)
-                .opacity(breathing ? 1 : 0.45)
-                .animation(
-                    reduceMotion
-                        ? nil
-                        : .easeInOut(duration: 1.05).repeatForever(),
-                    value: breathing
-                )
-                .frame(width: 26, height: 26) // keep the avatar column alignment
+            // the Avagenc mark holds its size; an accent sheen sweeps across it
+            Group {
+                if reduceMotion {
+                    LogoView(size: 18, variant: .accent)
+                } else {
+                    GlowSweepMark(size: 18)
+                }
+            }
+            .frame(width: 26, height: 26) // keep the avatar column alignment
 
             Text("\(order[index])…")
                 .font(.sans(13, .medium))
@@ -236,7 +233,6 @@ struct ThinkingRow: View {
         }
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .onAppear { breathing = true }
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: Self.statusDwell)
@@ -246,6 +242,52 @@ struct ThinkingRow: View {
                 }
             }
         }
+    }
+}
+
+/// The ink Avagenc mark at a fixed size with a soft accent sheen sweeping
+/// diagonally across the glyph — the color moves, the mark never scales.
+/// Driven by `TimelineView(.animation)` so the loop is deterministic and
+/// stops with the view (no `repeatForever` state to unwind).
+private struct GlowSweepMark: View {
+    var size: CGFloat
+
+    /// Full cycle: one sweep across the glyph, then a brief rest on ink.
+    private static let period: TimeInterval = 2.1
+    /// Portion of the cycle spent sweeping; the remainder is the rest.
+    private static let sweepShare = 0.62
+
+    var body: some View {
+        LogoView(size: size, variant: .ink)
+            .overlay {
+                TimelineView(.animation) { context in
+                    let cycle = context.date.timeIntervalSinceReferenceDate
+                        .truncatingRemainder(dividingBy: Self.period) / Self.period
+                    sheen(progress: min(cycle / Self.sweepShare, 1))
+                }
+                .mask(LogoView(size: size, variant: .ink))
+            }
+    }
+
+    /// Diagonal accent band; `progress` 0…1 carries it once across the glyph.
+    private func sheen(progress: Double) -> some View {
+        let eased = progress * progress * (3 - 2 * progress) // smoothstep glide
+        let bandWidth = size * 1.2
+        let travel = (size + bandWidth) * 1.3 // clear both edges despite the tilt
+        return LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0),
+                .init(color: Theme.accent.opacity(0.55), location: 0.35),
+                .init(color: Theme.accent, location: 0.5),
+                .init(color: Theme.accent.opacity(0.55), location: 0.65),
+                .init(color: .clear, location: 1),
+            ],
+            startPoint: .leading, endPoint: .trailing
+        )
+        .frame(width: bandWidth, height: size * 2.5)
+        .rotationEffect(.degrees(20))
+        .offset(x: travel * (eased - 0.5))
+        .blur(radius: 0.6)
     }
 }
 

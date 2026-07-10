@@ -12,14 +12,20 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            if !session.auth.ready {
-                // session still being restored: hold rendering so Login never flashes
+            #if DEBUG
+            // Test automation: `-previewThinking` renders the thinking
+            // indicator standalone (no session), so its animation can be
+            // screenshot-verified without signing in.
+            if ProcessInfo.processInfo.arguments.contains("-previewThinking") {
                 Theme.bg.ignoresSafeArea()
-            } else if !session.auth.authed {
-                LoginView()
+                ThinkingRow()
+                    .padding(.horizontal, Theme.sidePadding)
             } else {
-                MainView()
+                authGate
             }
+            #else
+            authGate
+            #endif
 
             // toast lives outside the auth gate so login errors show too
             if let toast = session.toast {
@@ -40,6 +46,18 @@ struct ContentView: View {
         }
         .environment(session)
         .preferredColorScheme(.light) // single warm-cream theme — no dark mode
+    }
+
+    @ViewBuilder
+    private var authGate: some View {
+        if !session.auth.ready {
+            // session still being restored: hold rendering so Login never flashes
+            Theme.bg.ignoresSafeArea()
+        } else if !session.auth.authed {
+            LoginView()
+        } else {
+            MainView()
+        }
     }
 }
 

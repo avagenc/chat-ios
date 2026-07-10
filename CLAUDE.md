@@ -67,7 +67,8 @@ chat-ios/
 - DEBUG launch args for automation: `-openScreen profile|postera|info|search`,
   `-openTopup`, `-autoSend "<text>"`, `-prefillDraft "<text>"` (fills the
   composer without sending). All require a signed-in Firebase session in the
-  simulator.
+  simulator, except `-previewThinking`, which renders the thinking indicator
+  standalone (no session) for visual checks of its animation.
 - Build: `xcodebuild -project chat-ios.xcodeproj -scheme chat-ios -destination
   'platform=iOS Simulator,name=iPhone 17 Pro' build`.
 
