@@ -43,12 +43,12 @@ struct LogoView: View {
     }
 }
 
-// MARK: - Agent avatar (26pt circle, agent-color bg, cream logo, inset white ring)
+// MARK: - Agent avatar (circle, agent-color bg, cream logo, inset white ring)
 
 struct AgentAvatar: View {
     var agent: AgentSpec
-    var size: CGFloat = 26
-    var logoSize: CGFloat = 13
+    var size: CGFloat
+    var logoSize: CGFloat
 
     var body: some View {
         ZStack {

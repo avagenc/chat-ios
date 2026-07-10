@@ -81,8 +81,6 @@ struct MessageRow: View {
     var onRetry: (String) -> Void = { _ in }
     var onAgentTap: (AgentSpec) -> Void = { _ in }
 
-    private let avatarSlot: CGFloat = 26 + 8
-
     var body: some View {
         VStack(alignment: msg.isHuman ? .trailing : .leading, spacing: 4) {
             // agent byline (name in agent color 12.5/600 + "· role" 11 faint)
@@ -100,24 +98,12 @@ struct MessageRow: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .padding(.leading, avatarSlot + 3)
+                .padding(.leading, 3)
             }
 
-            HStack(alignment: .top, spacing: 8) {
-                if !msg.isHuman {
-                    // the avatar slot stays when grouped so bubbles line up
-                    if let agent = msg.agent, !grouped {
-                        AgentAvatar(agent: agent)
-                    } else {
-                        Color.clear.frame(width: 26, height: 1)
-                    }
-                }
-                bubble
-            }
-            .frame(maxWidth: .infinity, alignment: msg.isHuman ? .trailing : .leading)
+            bubble
 
             statusLine
-                .padding(.leading, msg.isHuman ? 0 : avatarSlot)
         }
         .frame(maxWidth: .infinity, alignment: msg.isHuman ? .trailing : .leading)
     }
@@ -223,7 +209,6 @@ struct ThinkingRow: View {
                     GlowSweepMark(size: 18)
                 }
             }
-            .frame(width: 26, height: 26) // keep the avatar column alignment
 
             Text("\(order[index])…")
                 .font(.sans(13, .medium))
