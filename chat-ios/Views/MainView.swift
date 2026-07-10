@@ -20,8 +20,9 @@ struct MainView: View {
         NavigationStack(path: $navPath) {
             ChatScreen()
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(Theme.bg, for: .navigationBar)
-                .toolbarBackground(.visible, for: .navigationBar)
+                // Bar is fully transparent; ChatScreen draws a top fade so
+                // content dissolves under the wordmark like the web app.
+                .toolbarBackground(.hidden, for: .navigationBar)
                 .toolbar {
                     // wordmark: [ink logo] Avagenc CHAT → info page
                     ToolbarItem(placement: .topBarLeading) {
@@ -29,25 +30,25 @@ struct MainView: View {
                             Button {
                                 navPath.append(Destination.info)
                             } label: {
-                                HStack(spacing: 6) {
+                                // Mirrors web .wordmark-float: baseline-aligned,
+                                // serif name + faint uppercase "CHAT", no fill.
+                                HStack(alignment: .firstTextBaseline, spacing: 6) {
                                     LogoView(size: 17, variant: .ink)
                                     Text("Avagenc")
-                                        .font(.serif(16, .medium))
+                                        .font(.serif(15, .medium))
+                                        .kerning(-0.15)
                                         .foregroundStyle(Theme.ink)
                                     Text("CHAT")
-                                        .font(.sans(9.5, .semibold))
+                                        .font(.sans(10, .medium))
                                         .kerning(0.6)
-                                        .foregroundStyle(Theme.accentDeep)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Theme.accentTint)
-                                        .clipShape(Capsule())
+                                        .foregroundStyle(Theme.inkFaint)
                                 }
                                 .fixedSize()
                             }
                             .buttonStyle(.plain)
                         }
                     }
+                    .sharedBackgroundVisibility(.hidden)
 
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         if !session.searchActive {
@@ -79,6 +80,7 @@ struct MainView: View {
                             .accessibilityLabel("Profil")
                         }
                     }
+                    .sharedBackgroundVisibility(.hidden)
                 }
                 .navigationDestination(for: Destination.self) { destination in
                     switch destination {

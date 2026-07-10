@@ -63,6 +63,8 @@ struct ChatScreen: View {
                     }
                 }
             }
+
+            topFade
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if session.searchActive {
@@ -97,6 +99,25 @@ struct ChatScreen: View {
             await conversation.sendText(args[i + 1])
         }
         #endif
+    }
+
+    // Web's .top-fade: messages dissolve into the background under the
+    // transparent nav bar. Solid through the status bar, then fades out.
+    private var topFade: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                stops: [
+                    .init(color: Theme.bg, location: 0),
+                    .init(color: Theme.bg, location: 0.35),
+                    .init(color: Theme.bg.opacity(0), location: 1),
+                ],
+                startPoint: .top, endPoint: .bottom
+            )
+            .frame(height: 168)
+            Spacer(minLength: 0)
+        }
+        .ignoresSafeArea(edges: .top)
+        .allowsHitTesting(false)
     }
 
     // MARK: - Canvas
