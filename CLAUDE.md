@@ -28,7 +28,10 @@ visual design (warm cream, Newsreader serif).
 ## Configuration & auth
 
 - `Core/AppConfig.swift`: `apiBase` = Cloud Run backend URL; `webAppURL` —
-  web origin for `/legal` links.
+  web origin for `/legal` links. Values are injected at build time from
+  `Config/Dev.xcconfig` (Debug) / `Config/Prod.xcconfig` (Release) via
+  Info.plist keys `APIBaseURL`/`WebAppURL`; a missing key crashes at first
+  access by design. Prod currently mirrors Dev until the prod backend ships.
 - **Auth = Firebase SDK + GoogleSignIn SDK** (SPM: `firebase-ios-sdk` product
   `FirebaseAuth`, `GoogleSignIn-iOS`). Configured from
   `chat-ios/GoogleService-Info.plist` (bundle `avagenc.chat-ios`).
@@ -43,6 +46,8 @@ visual design (warm cream, Newsreader serif).
 ## Structure
 
 ```
+Config/        Dev.xcconfig + Prod.xcconfig (per-environment URLs; `$()`
+               splits "//" so it isn't parsed as an xcconfig comment)
 chat-ios/
   Core/        Theme (design tokens — FINAL, do not "fix"),
                Agents (roster+routing), Models (backend contract DTOs),

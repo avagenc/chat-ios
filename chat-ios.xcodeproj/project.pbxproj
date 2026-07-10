@@ -13,6 +13,8 @@
 
 /* Begin PBXFileReference section */
 		300D94DE2FFF77E300E34C1A /* chat-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "chat-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		300D94F82FFF780000E34C1A /* Dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Dev.xcconfig; sourceTree = "<group>"; };
+		300D94F92FFF780000E34C1A /* Prod.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Prod.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -52,9 +54,19 @@
 		300D94D52FFF77E300E34C1A = {
 			isa = PBXGroup;
 			children = (
+				300D94FA2FFF780000E34C1A /* Config */,
 				300D94E02FFF77E300E34C1A /* chat-ios */,
 				300D94DF2FFF77E300E34C1A /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		300D94FA2FFF780000E34C1A /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				300D94F82FFF780000E34C1A /* Dev.xcconfig */,
+				300D94F92FFF780000E34C1A /* Prod.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		300D94DF2FFF77E300E34C1A /* Products */ = {
@@ -153,6 +165,7 @@
 /* Begin XCBuildConfiguration section */
 		300D94E72FFF77E500E34C1A /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 300D94F82FFF780000E34C1A /* Dev.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -216,6 +229,7 @@
 		};
 		300D94E82FFF77E500E34C1A /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 300D94F92FFF780000E34C1A /* Prod.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

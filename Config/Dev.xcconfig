@@ -1,0 +1,5 @@
+// Dev environment — used by Debug builds.
+// Note: $() splits "//" so it isn't parsed as a comment.
+
+API_BASE_URL = https:/$()/chat-http-409829581223.asia-southeast1.run.app
+WEB_APP_URL = https:/$()/chat.dev.avagenc.com
