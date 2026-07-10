@@ -17,7 +17,7 @@ enum AppConfig {
 
     /// Web app origin — used for legal page links (/legal).
     /// Empty = legal links render as plain text.
-    static let webAppURL = ""
+    static let webAppURL = "https://chat.dev.avagenc.com"
 
     /// This app's custom URL scheme (registered in Info.plist) — used for
     /// integration-linking callbacks once the backend supports mobile redirects.
