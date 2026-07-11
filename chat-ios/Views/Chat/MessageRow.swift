@@ -201,10 +201,10 @@ struct ThinkingRow: View {
     var body: some View {
         // bare mark + status — no avatar circle, no chat bubble
         HStack(spacing: 8) {
-            // the Avagenc mark holds its size; an accent sheen sweeps across it
+            // the Avagenc mark holds its size; an ink sheen sweeps across it
             Group {
                 if reduceMotion {
-                    LogoView(size: 18, variant: .accent)
+                    LogoView(size: 18, variant: .ink)
                 } else {
                     GlowSweepMark(size: 18)
                 }
@@ -230,20 +230,23 @@ struct ThinkingRow: View {
     }
 }
 
-/// The ink Avagenc mark at a fixed size with a soft accent sheen sweeping
-/// diagonally across the glyph — the color moves, the mark never scales.
-/// Driven by `TimelineView(.animation)` so the loop is deterministic and
-/// stops with the view (no `repeatForever` state to unwind).
+/// The Avagenc mark at a fixed size, dimmed to faint ink, with a full-ink
+/// sheen sweeping diagonally across the glyph — the color moves, the mark
+/// never scales. Driven by `TimelineView(.animation)` so the loop is
+/// deterministic and stops with the view (no `repeatForever` state to unwind).
 private struct GlowSweepMark: View {
     var size: CGFloat
 
-    /// Full cycle: one sweep across the glyph, then a brief rest on ink.
+    /// Full cycle: one sweep across the glyph, then a brief rest.
     private static let period: TimeInterval = 2.1
     /// Portion of the cycle spent sweeping; the remainder is the rest.
     private static let sweepShare = 0.62
+    /// Resting alpha of the mark; the sweep lifts it to full ink.
+    private static let restAlpha = 0.34
 
     var body: some View {
         LogoView(size: size, variant: .ink)
+            .opacity(Self.restAlpha)
             .overlay {
                 TimelineView(.animation) { context in
                     let cycle = context.date.timeIntervalSinceReferenceDate
@@ -254,7 +257,7 @@ private struct GlowSweepMark: View {
             }
     }
 
-    /// Diagonal accent band; `progress` 0…1 carries it once across the glyph.
+    /// Diagonal ink band; `progress` 0…1 carries it once across the glyph.
     private func sheen(progress: Double) -> some View {
         let eased = progress * progress * (3 - 2 * progress) // smoothstep glide
         let bandWidth = size * 1.2
@@ -262,9 +265,9 @@ private struct GlowSweepMark: View {
         return LinearGradient(
             stops: [
                 .init(color: .clear, location: 0),
-                .init(color: Theme.accent.opacity(0.55), location: 0.35),
-                .init(color: Theme.accent, location: 0.5),
-                .init(color: Theme.accent.opacity(0.55), location: 0.65),
+                .init(color: Theme.ink.opacity(0.55), location: 0.35),
+                .init(color: Theme.ink, location: 0.5),
+                .init(color: Theme.ink.opacity(0.55), location: 0.65),
                 .init(color: .clear, location: 1),
             ],
             startPoint: .leading, endPoint: .trailing
